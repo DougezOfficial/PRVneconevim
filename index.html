@@ -82,85 +82,105 @@
         </div>
     </div>
 
-    <script>
+<script>
         const form = document.getElementById('support-form');
         const ticketsContainer = document.getElementById('tickets-container');
         const submitBtn = document.getElementById('submit-btn');
+        const queryInput = document.getElementById('query');
+        
         let ticketCounter = 1;
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const email = document.getElementById('email').value;
-            const query = document.getElementById('query').value;
-            
-            if (!email || !query) return;
+        // Formátování data
+        const formatDate = () => {
+            const now = new Date();
+            return now.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }) + ' - ' + now.toLocaleDateString('cs-CZ');
+        };
 
-            // Zablokování formuláře během odesílání
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Odesílám...';
-            submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+        // Zamezení nebezpečným HTML znakům
+        const escapeHTML = (str) => {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    "'": '&#39;',
+                    '"': '&quot;'
+                }[tag] || tag)
+            );
+        };
 
-            // Vytvoření bloku pro nový dotaz
-            const ticketId = `ticket-${ticketCounter++}`;
-            const ticketElement = createTicketElement(ticketId, email, query);
-            ticketsContainer.insertBefore(ticketElement, ticketsContainer.firstChild);
+        // Formátování textu odpovědi z markdownu do HTML
+        const formatResponse = (text) => {
+            let formatted = escapeHTML(text);
+            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>'); // Tučné
+            formatted = formatted.replace(/\*(.*?)\*/g, '<em class="text-gray-300">$1</em>'); // Kurzíva
+            formatted = formatted.replace(/`(.*?)`/g, '<code class="bg-gray-800 text-blue-300 px-1.5 py-0.5 rounded text-sm font-mono">$1</code>'); // Kód
+            formatted = formatted.replace(/\n/g, '<br>'); // Odřádkování
+            return formatted;
+        };
 
-            // Vyčištění formuláře
-            document.getElementById('query').value = '';
-
-            // Volání Gemini API pro generování odpovědi
-            await fetchSupportResponse(ticketId, query);
-
-            // Odblokování formuláře
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = 'Odeslat dotaz';
-            submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
-        });
-
-        function createTicketElement(id, email, query) {
+        // Vytvoření vizuálního bloku (ticketu) pro dotaz a odpověď
+        const createTicketElement = (id, email, query) => {
             const div = document.createElement('div');
             div.id = id;
-            div.className = 'bg-gray-800 rounded-2xl overflow-hidden shadow-lg border border-gray-700 fade-in';
-            
-            const date = new Date().toLocaleString('cs-CZ');
+            div.className = 'bg-gray-800/80 rounded-2xl overflow-hidden shadow-lg border border-gray-700/50 backdrop-blur-sm fade-in flex flex-col';
             
             div.innerHTML = `
-                <div class="p-6 border-b border-gray-700 bg-gray-800/50">
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="flex items-center space-x-2">
-                            <div class="bg-blue-900/50 text-blue-400 p-2 rounded-full">
+                <!-- Uživatelský dotaz -->
+                <div class="p-6 border-b border-gray-700/50 bg-gray-800/40">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-gray-400 border border-gray-600">
                                 <i class="fas fa-user"></i>
                             </div>
                             <div>
-                                <p class="text-sm font-medium text-gray-200">${email}</p>
-                                <p class="text-xs text-gray-500">${date}</p>
+                                <p class="text-sm font-semibold text-gray-200">${escapeHTML(email)}</p>
+                                <p class="text-xs text-gray-500">${formatDate()}</p>
                             </div>
                         </div>
-                        <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-900/50 text-yellow-400 border border-yellow-700/50">
-                            Zpracovává se
+                        <span class="status-badge inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+                            <i class="fas fa-circle-notch fa-spin mr-1.5"></i> Zpracovává se
                         </span>
                     </div>
-                    <p class="mt-4 text-gray-300 whitespace-pre-wrap">${escapeHTML(query)}</p>
+                    <p class="text-gray-300 whitespace-pre-wrap leading-relaxed">${escapeHTML(query)}</p>
                 </div>
-                <div class="response-container p-6 bg-gray-750 min-h-[100px] flex flex-col justify-center">
-                    <div class="typing-indicator flex items-center text-gray-400 text-sm">
-                        <span></span><span></span><span></span>
-                        <span class="ml-3">Podpora píše odpověď...</span>
+
+                <!-- Odpověď podpory (nejprve indikátor načítání) -->
+                <div class="response-container p-6 bg-gray-800/80 min-h-[120px] flex flex-col">
+                    <div class="flex items-start space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-900/50 flex-shrink-0">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="flex-1 pt-2">
+                            <div class="typing-indicator flex items-center text-gray-400 text-sm h-6">
+                                <span></span><span></span><span></span>
+                                <span class="ml-3 font-medium tracking-wide">AI Podpora analyzuje dotaz...</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
             return div;
-        }
+        };
 
+        // Funkce pro zavolání Gemini API a zobrazení výsledku
         async function fetchSupportResponse(ticketId, userQuery) {
             const ticketElement = document.getElementById(ticketId);
             const responseContainer = ticketElement.querySelector('.response-container');
-            const statusBadge = ticketElement.querySelector('span.rounded-full');
+            const statusBadge = ticketElement.querySelector('.status-badge');
             
-            const systemPrompt = "Jsi profesionální, empatický a velmi užitečný agent technické podpory. Tvé jméno je AI Asistent. Odpovídej vždy v češtině, stručně, jasně a slušně. Snaž se identifikovat problém a navrhnout konkrétní kroky k řešení nebo požádat o doplňující informace, pokud jsou potřeba k vyřešení problému.";
+            // Instrukce pro model - určuje chování agenta
+            const systemPrompt = `Jsi profesionální, velmi empatický a užitečný AI agent technické podpory. 
+            Tvé jméno je "Podpora AI". 
+            Pravidla pro odpověď:
+            1. Odpovídej vždy v češtině.
+            2. Buď stručný, jasný a velmi slušný.
+            3. Snaž se pochopit problém uživatele.
+            4. Navrhni konkrétní kroky k řešení ve formě odrážek (použij pomlčky).
+            5. Pokud nemáš dostatek informací, popros o jejich doplnění.
+            6. Na konci odpovědi popřej hezký den nebo nabídni další pomoc.`;
             
-            const apiKey = ""; // Canvas doplní klíč automaticky
+            const apiKey = ""; // API klíč je automaticky injektován Canvas prostředím
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
             
             const payload = {
@@ -175,24 +195,34 @@
                     body: JSON.stringify(payload)
                 });
                 
-                if (!response.ok) throw new Error('API Request failed');
+                if (!response.ok) {
+                    throw new Error(`Chyba API: ${response.status}`);
+                }
                 
                 const result = await response.json();
-                const replyText = result.candidates[0].content.parts[0].text;
                 
-                // Aktualizace UI s odpovědí
-                statusBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/50 text-green-400 border border-green-700/50";
-                statusBadge.textContent = "Vyřešeno";
+                // Extrakce textu z odpovědi
+                let replyText = "";
+                if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts.length > 0) {
+                    replyText = result.candidates[0].content.parts[0].text;
+                } else {
+                    throw new Error("Neplatná struktura odpovědi z API");
+                }
+                
+                // Úspěch - aktualizace UI
+                statusBadge.className = "status-badge inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-400 border border-green-500/20";
+                statusBadge.innerHTML = '<i class="fas fa-check mr-1.5"></i> Vyřešeno';
                 
                 responseContainer.innerHTML = `
-                    <div class="flex items-start space-x-3 fade-in">
-                        <div class="bg-green-900/50 text-green-400 p-2 rounded-full mt-1 flex-shrink-0">
-                            <i class="fas fa-headset"></i>
+                    <div class="flex items-start space-x-4 fade-in">
+                        <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-900/50 flex-shrink-0 relative">
+                            <i class="fas fa-robot"></i>
+                            <div class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-gray-800 rounded-full"></div>
                         </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-200 mb-1">Technická Podpora (AI)</p>
-                            <div class="prose prose-invert prose-sm max-w-none text-gray-300">
-                                ${formatResponse(escapeHTML(replyText))}
+                        <div class="flex-1 bg-gray-700/30 rounded-2xl rounded-tl-none p-4 border border-gray-600/30">
+                            <p class="text-sm font-semibold text-blue-300 mb-2">Podpora AI <span class="text-xs text-gray-500 ml-2 font-normal">${formatDate()}</span></p>
+                            <div class="text-gray-200 text-sm leading-relaxed space-y-3">
+                                ${formatResponse(replyText)}
                             </div>
                         </div>
                     </div>
@@ -200,39 +230,60 @@
 
             } catch (error) {
                 console.error("Error fetching support response:", error);
-                statusBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-900/50 text-red-400 border border-red-700/50";
-                statusBadge.textContent = "Chyba";
+                
+                // Chyba - aktualizace UI
+                statusBadge.className = "status-badge inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20";
+                statusBadge.innerHTML = '<i class="fas fa-exclamation-circle mr-1.5"></i> Chyba';
                 
                 responseContainer.innerHTML = `
-                    <div class="flex items-center space-x-2 text-red-400 fade-in">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <p class="text-sm">Omlouváme se, systém technické podpory je aktuálně nedostupný. Zkuste to prosím později.</p>
+                    <div class="flex items-start space-x-4 fade-in">
+                        <div class="w-10 h-10 rounded-full bg-red-900/50 border border-red-500/30 flex items-center justify-center text-red-400 flex-shrink-0">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="flex-1 bg-red-900/10 rounded-2xl rounded-tl-none p-4 border border-red-900/30">
+                            <div class="flex items-center text-red-400 space-x-2">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <p class="text-sm font-medium">Omlouváme se, systém AI podpory je aktuálně nedostupný. Zkuste to prosím znovu za malou chvíli.</p>
+                            </div>
+                        </div>
                     </div>
                 `;
             }
         }
 
-        function escapeHTML(str) {
-            return str.replace(/[&<>'"]/g, 
-                tag => ({
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    "'": '&#39;',
-                    '"': '&quot;'
-                }[tag])
-            );
-        }
+        // Event listener pro formulář
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const query = queryInput.value.trim();
+            
+            if (!email || !query) return;
 
-        function formatResponse(text) {
-            // Jednoduchá náhrada odřádkování pro HTML zobrazení a základní formátování markdownu
-            let formatted = text.replace(/\n/g, '<br>');
-            // Tučné písmo
-            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            // Odkazy
-            formatted = formatted.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-blue-400 hover:underline" target="_blank">$1</a>');
-            return formatted;
-        }
+            // 1. Změna stavu tlačítka (zablokování)
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i><span>Zpracovávám dotaz...</span>';
+            submitBtn.classList.add('opacity-70', 'cursor-not-allowed');
+
+            // 2. Vytvoření ticketu v historii
+            const ticketId = `ticket-${ticketCounter++}`;
+            const ticketElement = createTicketElement(ticketId, email, query);
+            
+            // Přidání na začátek (nejnovější nahoře)
+            ticketsContainer.insertBefore(ticketElement, ticketsContainer.firstChild);
+
+            // 3. Vyčištění pole pro dotaz (aby mohl psát další)
+            queryInput.value = '';
+
+            // 4. Zavolání API (běží na pozadí)
+            await fetchSupportResponse(ticketId, query);
+
+            // 5. Obnovení tlačítka
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i><span>Odeslat další dotaz</span>';
+            submitBtn.classList.remove('opacity-70', 'cursor-not-allowed');
+        });
+
     </script>
 </body>
 </html>
