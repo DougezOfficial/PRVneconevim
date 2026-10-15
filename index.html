@@ -1,85 +1,41 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portál Technické Podpory</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .fade-in {
-            animation: fadeIn 0.5s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .typing-indicator span {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            background-color: #9CA3AF;
-            border-radius: 50%;
-            margin: 0 2px;
-            animation: typing 1.4s infinite both;
-        }
-        .typing-indicator span:nth-child(1) { animation-delay: 0s; }
-        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes typing {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Technická podpora – VDF Games</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col items-center py-10 px-4 sm:px-6 lg:px-8">
+<body>
+  <h1>Technická podpora – VDF Games</h1>
 
-    <div class="max-w-3xl w-full space-y-8">
-        <div class="text-center">
-            <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
-                Technická Podpora
-            </h1>
-            <p class="mt-3 text-xl text-gray-400">
-                Jsme tu pro vás. Napište nám svůj problém a my vám obratem pomůžeme.
-            </p>
-        </div>
+  <p>
+    Jak ti můžeme pomoct? Napiš, jaký máš problém.
+  </p>
 
-        <div class="bg-gray-800 shadow-xl rounded-2xl p-6 sm:p-10 border border-gray-700">
-            <form id="support-form" class="space-y-6">
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-300">Vaše e-mailová adresa</label>
-                    <div class="mt-1">
-                        <input id="email" name="email" type="email" autocomplete="email" required
-                            class="appearance-none block w-full px-4 py-3 border border-gray-600 rounded-lg shadow-sm bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-150 ease-in-out"
-                            placeholder="jan.novak@example.com">
-                    </div>
-                </div>
+  <form id="question-form">
+    <label for="question">Tvůj dotaz:</label><br>
+    <textarea
+      id="question"
+      rows="5"
+      placeholder="Např.: Po poslední aktualizaci se mi hra nespustí..."
+    ></textarea>
 
-                <div>
-                    <label for="query" class="block text-sm font-medium text-gray-300">Popis problému</label>
-                    <div class="mt-1">
-                        <textarea id="query" name="query" rows="4" required
-                            class="appearance-none block w-full px-4 py-3 border border-gray-600 rounded-lg shadow-sm bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-150 ease-in-out"
-                            placeholder="Zde podrobně popište, s čím potřebujete pomoci..."></textarea>
-                    </div>
-                </div>
+    <!-- volitelně, polepro zadání emailu -->
+    <label for="email">E-mail (nepovinné):</label><br>
+    <input
+      type="email"
+      id="email"
+      placeholder="tvuj@email.cz"
+    >
 
-                <div>
-                    <button type="submit" id="submit-btn"
-                        class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-900 transition duration-150 ease-in-out">
-                        Odeslat dotaz
-                    </button>
-                </div>
-            </form>
-        </div>
+    <button type="submit">Odeslat dotaz</button>
+  </form>
 
-        <div id="tickets-container" class="space-y-6 mt-10">
-            <!-- Dynamicky přidávané tickety -->
-        </div>
-    </div>
+  <h2>Odpověď podpory:</h2>
+  <div id="answer">
+    Zatím žádný dotaz.
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>

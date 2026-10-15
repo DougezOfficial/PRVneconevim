@@ -1,6 +1,6 @@
 const USE_BACKEND = false;
 
-const BACKEND_URL = "https://nevimstranka.onrender.com/chat";
+const BACKEND_URL = "https://PRVneconevim.onrender.com/chat";
 const STUDENT_ID = "admin";
 
 const form = document.getElementById("question-form");
@@ -64,4 +64,4 @@ form.addEventListener("submit", async (e) => {
     form.querySelector("button").disabled = false;
     textarea.value = "";
   }
-});!
+});
