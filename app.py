@@ -4,12 +4,11 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 
-# Pro školní projekt povolíme CORS všude (později se dá zpřísnit)
 CORS(app)
 
 @app.get("/")
 def home():
-    return "VDF Support Backend is running"
+    return "nevim gej funguje"
 
 @app.post("/chat")
 def chat():
@@ -18,9 +17,8 @@ def chat():
     student = (data.get("student") or "unknown").strip()
 
     if not message:
-        return jsonify({"error": "message is required"}), 400
+        return jsonify({"error": "chybi zprava"}), 400
 
-    # Zatím fake odpověď (fáze BACKEND)
     reply = f"[DEMO] Přijal jsem dotaz od {student}: {message}"
 
     return jsonify({"reply": reply})
