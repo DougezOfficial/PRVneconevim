@@ -1,7 +1,9 @@
-const USE_BACKEND = false;
+// Přepínač: zatím bez backendu
+const USE_BACKEND = true;
 
-const BACKEND_URL = "https://PRVneconevim.onrender.com/chat";
-const STUDENT_ID = "admin";
+// TADY si každý student nastaví svoje údaje (až bude backend):
+const BACKEND_URL = "https://vdf-games-kostak-2026.onrender.com/chat";
+const STUDENT_ID = "Kostak_Ladislav_4ITE";
 
 const form = document.getElementById("question-form");
 const textarea = document.getElementById("question");
@@ -15,11 +17,12 @@ form.addEventListener("submit", async (e) => {
   const email = emailInput.value.trim();
 
   if (!text) {
-    answerDiv.textContent = "napiš zprávu";
+    answerDiv.textContent = "Nejdřív napiš dotaz.";
     return;
   }
 
-  answerDiv.textContent = "cekej"
+  // vždy ukážeme "loading"
+  answerDiv.textContent = "Zpracovávám dotaz…";
   form.querySelector("button").disabled = true;
 
   try {
@@ -29,6 +32,7 @@ form.addEventListener("submit", async (e) => {
       email: email || null
     };
 
+    // --- FAKE MODE (bez backendu) ---
     if (!USE_BACKEND) {
       answerDiv.textContent =
         `Demo odpověď (bez serveru)\n\n` +
@@ -37,6 +41,7 @@ form.addEventListener("submit", async (e) => {
       return;
     }
 
+    // --- REAL MODE (s backendem) ---
     const res = await fetch(BACKEND_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
