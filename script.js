@@ -2,7 +2,7 @@
 const USE_BACKEND = true;
 
 // TADY si každý student nastaví svoje údaje (až bude backend):
-const BACKEND_URL = "https://prvneconevim.onrender.com";
+const BACKEND_URL = "https://prvneconevim.onrender.com/chat";
 const STUDENT_ID = "Zezulka_4ITE";
 
 const form = document.getElementById("question-form");
